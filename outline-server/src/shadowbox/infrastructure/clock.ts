@@ -18,14 +18,24 @@ export interface Clock {
   setInterval(callback: () => void, intervalMs: number): void;
 }
 
+const timers = [];
+
 export class RealClock implements Clock {
   now(): number {
     return Date.now();
   }
 
   setInterval(callback, intervalMs: number): void {
-    setInterval(callback, intervalMs);
+    const timer = setInterval(callback, intervalMs);
+    timers.push(timer);
   }
+}
+
+export function clearIntervals() {
+  for (const timer of timers) {
+    clearInterval(timer);
+  }
+  timers.length = 0;
 }
 
 // Fake clock where you manually set what is "now" and can trigger the scheduled callbacks.

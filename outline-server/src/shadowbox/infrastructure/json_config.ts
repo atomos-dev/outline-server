@@ -62,30 +62,6 @@ export class ChildConfig<T> implements JsonConfig<T> {
   }
 }
 
-// DelayedConfig is a JsonConfig that only writes the data in a periodic time interval.
-// Calls to write() will mark the data as "dirty" for the next inverval.
-export class DelayedConfig<T> implements JsonConfig<T> {
-  private dirty = false;
-  constructor(private config: JsonConfig<T>, writePeriodMs: number) {
-    // This repeated call will never be cancelled until the execution is terminated.
-    setInterval(() => {
-      if (!this.dirty) {
-        return;
-      }
-      this.config.write();
-      this.dirty = false;
-    }, writePeriodMs);
-  }
-
-  data(): T {
-    return this.config.data();
-  }
-
-  write() {
-    this.dirty = true;
-  }
-}
-
 // InMemoryConfig is a JsonConfig backed by an internal member variable. Useful for testing.
 export class InMemoryConfig<T> implements JsonConfig<T> {
   // Holds the data JSON as it was when `write()` was called.
