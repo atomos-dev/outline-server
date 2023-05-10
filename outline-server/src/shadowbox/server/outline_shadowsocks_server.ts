@@ -27,6 +27,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
   private ssProcess: child_process.ChildProcess;
   private ipCountryFilename = '';
   private isReplayProtectionEnabled = false;
+  private isStopped = false;
 
   // binaryFilename is the location for the outline-ss-server binary.
   // configFilename is the location for the outline-ss-server config.
@@ -88,6 +89,10 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     });
   }
 
+  stop() {
+    this.isStopped = true;
+  }
+
   private start() {
     const commandArguments = ['-config', this.configFilename, '-metrics', this.metricsLocation];
     if (this.ipCountryFilename) {
@@ -105,21 +110,15 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     });
     this.ssProcess.on('exit', (code, signal) => {
       logging.info(`outline-ss-server has exited with error. Code: ${code}, Signal: ${signal}`);
-      logging.info(`Restarting`);
-      this.start();
+      if (!this.isStopped) {
+        logging.info(`Restarting`);
+        this.start();
+      }
     });
     // This exposes the outline-ss-server output on the docker logs.
     // TODO(fortuna): Consider saving the output and expose it through the manager service.
-    this.ssProcess.stdout.pipe(
-      fs.createWriteStream(
-        '/Users/xinbiguo/Documents/tmp/stop/outline-server/test/outline-ss-server_stdout.log'
-      )
-    );
-    this.ssProcess.stderr.pipe(
-      fs.createWriteStream(
-        '/Users/xinbiguo/Documents/tmp/stop/outline-server/test/outline-ss-server_stderr.log'
-      )
-    );
+    this.ssProcess.stdout.pipe(fs.createWriteStream('/var/deeper/runtime/outline_stdout.log'));
+    this.ssProcess.stderr.pipe(fs.createWriteStream('/var/deeper/runtime/outline_stdout.log'));
   }
 }
 

@@ -82,9 +82,10 @@ function createRolloutTracker(
   return rollouts;
 }
 
-let apiServerHandle: restify.Server;
+let apiServer: restify.Server;
+let shadowsocksServer: OutlineShadowsocksServer;
 
-async function main(
+async function start(
   logLevel: string,
   appBaseDir: string,
   apiPort: number,
@@ -165,7 +166,7 @@ async function main(
     job_name: 'outline-server-ss',
     static_configs: [{targets: [ssMetricsLocation]}],
   });
-  const shadowsocksServer = new OutlineShadowsocksServer(
+  shadowsocksServer = new OutlineShadowsocksServer(
     getBinaryFilename('outline-ss-server'),
     getPersistentFilename('outline-ss-server/config.yml'),
     verbose,
@@ -227,7 +228,7 @@ async function main(
     metricsPublisher
   );
 
-  const apiServer = restify.createServer({
+  apiServer = restify.createServer({
     certificate: fs.readFileSync(certificateFilename),
     key: fs.readFileSync(privateKeyFilename),
   });
@@ -252,14 +253,18 @@ async function main(
   apiServer.listen(apiPortNumber, () => {
     logging.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
   });
-  apiServerHandle = apiServer;
 
   await accessKeyRepository.start(new RealClock());
 }
 
-function stop() {
-  if (apiServerHandle) {
-    apiServerHandle.close();
+async function stop() {
+  if (apiServer) {
+    apiServer.close();
+    apiServer = undefined;
+  }
+  if (shadowsocksServer) {
+    shadowsocksServer.stop();
+    shadowsocksServer = undefined;
   }
   clearIntervals();
 }
@@ -278,38 +283,4 @@ process.on('unhandledRejection', (error: Error) => {
   logging.error(`unhandledRejection: ${error.stack}`);
 });
 
-module.exports = {main, stop};
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-(async () => {
-  main(
-    'debug',
-    '/Users/xinbiguo/Documents/tmp/stop/outline-server/test',
-    9527,
-    '/Users/xinbiguo/Documents/tmp/stop/outline-server/test/shadowbox-selfsigned-dev.crt',
-    '/Users/xinbiguo/Documents/tmp/stop/outline-server/test/shadowbox-selfsigned-dev.key',
-    'test',
-    '/Users/xinbiguo/Documents/tmp/stop/outline-server/test/persisted-state'
-  ).catch((error) => {
-    logging.error(error.stack);
-    process.exit(1);
-  });
-  await sleep(5000);
-  stop();
-  console.log(123);
-  // main(
-  //   'debug',
-  //   '/Users/xinbiguo/Documents/tmp/stop/outline-server/test',
-  //   9527,
-  //   '/Users/xinbiguo/Documents/tmp/stop/outline-server/test/shadowbox-selfsigned-dev.crt',
-  //   '/Users/xinbiguo/Documents/tmp/stop/outline-server/test/shadowbox-selfsigned-dev.key',
-  //   'test',
-  //   '/Users/xinbiguo/Documents/tmp/stop/outline-server/test/persisted-state'
-  // ).catch((error) => {
-  //   logging.error(error.stack);
-  //   process.exit(1);
-  // });
-})();
+module.exports = {start, stop};

@@ -23,6 +23,9 @@ const config = {
   output: {
     filename: 'main.js',
     path: path.resolve(__dirname, '../../build/shadowbox/app'),
+    libraryTarget: 'umd',
+    library: 'MyLib',
+    umdNamedDefine: true,
   },
   module: {rules: [{test: /\.ts(x)?$/, use: 'ts-loader'}]},
   node: {

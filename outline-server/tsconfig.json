@@ -4,7 +4,7 @@
     "removeComments": false,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "commonjs",
     "sourceMap": true,
     "experimentalDecorators": true,
     "allowJs": true,
