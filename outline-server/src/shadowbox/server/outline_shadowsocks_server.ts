@@ -117,8 +117,12 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     });
     // This exposes the outline-ss-server output on the docker logs.
     // TODO(fortuna): Consider saving the output and expose it through the manager service.
-    this.ssProcess.stdout.pipe(fs.createWriteStream('/var/deeper/runtime/outline_stdout.log'));
-    this.ssProcess.stderr.pipe(fs.createWriteStream('/var/deeper/runtime/outline_stdout.log'));
+    this.ssProcess.stdout.pipe(
+      fs.createWriteStream('/var/deeper/runtime/outline_stdout.log', {flags: 'a'})
+    );
+    this.ssProcess.stderr.pipe(
+      fs.createWriteStream('/var/deeper/runtime/outline_stdout.log', {flags: 'a'})
+    );
   }
 }
 
