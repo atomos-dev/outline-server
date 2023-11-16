@@ -97,10 +97,12 @@ function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
 }
 
 function isValidCipher(cipher: string): boolean {
-    if (["aes-256-gcm", "aes-192-gcm", "aes-128-gcm", "chacha20-ietf-poly1305"].indexOf(cipher) === -1) {
-      return false;
-    }
-    return true;
+  if (
+    ['aes-256-gcm', 'aes-192-gcm', 'aes-128-gcm', 'chacha20-ietf-poly1305'].indexOf(cipher) === -1
+  ) {
+    return false;
+  }
+  return true;
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
@@ -131,19 +133,20 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   // Starts the Shadowsocks server and exposes the access key configuration to the server.
   // Periodically enforces access key limits.
   async start(clock: Clock): Promise<void> {
-    const tryEnforceDataLimits = async () => {
-      try {
-        await this.enforceAccessKeyDataLimits();
-      } catch (e) {
-        logging.error(`Failed to enforce access key limits: ${e}`);
-      }
-    };
-    await tryEnforceDataLimits();
+    // Since we removed prometheus, we don't need to enforce data limits anymore.
+    // const tryEnforceDataLimits = async () => {
+    //   try {
+    //     await this.enforceAccessKeyDataLimits();
+    //   } catch (e) {
+    //     logging.error(`Failed to enforce access key limits: ${e}`);
+    //   }
+    // };
+    // await tryEnforceDataLimits();
     await this.updateServer();
-    clock.setInterval(
-      tryEnforceDataLimits,
-      ServerAccessKeyRepository.DATA_LIMITS_ENFORCEMENT_INTERVAL_MS
-    );
+    // clock.setInterval(
+    //   tryEnforceDataLimits,
+    //   ServerAccessKeyRepository.DATA_LIMITS_ENFORCEMENT_INTERVAL_MS
+    // );
   }
 
   private isExistingAccessKeyPort(port: number): boolean {
